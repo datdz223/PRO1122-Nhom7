@@ -1,5 +1,7 @@
 package com.example.da1.admin.category;
 
+import static android.os.Build.VERSION_CODES_FULL.R;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -17,6 +19,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import ph61733.d04072025.pro1122.admin.category.Category;
+
 public class CategoryManagementActivity extends AppCompatActivity {
     private RecyclerView recyclerViewCategories;
     private com.example.da1.admin.category.CategoryAdapter categoryAdapter;
@@ -27,7 +31,7 @@ public class CategoryManagementActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_category_management);
+        setContentView(R.activity_category_management);
 
         initViews();
         setupRecyclerView();
