@@ -101,31 +101,48 @@ public class LoginActivity extends AppCompatActivity {
         boolean isValid = true;
 
         if (TextUtils.isEmpty(username)) {
-            tilUsername.setError(getString(R.string.error_username_required));
+            tilUsername.setError("Vui lòng nhập tên đăng nhập");
             isValid = false;
         }
 
         if (TextUtils.isEmpty(password)) {
-            tilPassword.setError(getString(R.string.error_password_required));
+            tilPassword.setError("Vui lòng nhập mật khẩu");
             isValid = false;
         } else if (password.length() < 6) {
-            tilPassword.setError(getString(R.string.error_password_min_length));
+            tilPassword.setError("Mật khẩu phải có ít nhất 6 ký tự");
             isValid = false;
         }
 
         if (isValid) {
-            // Check user credentials in database
-            User user = databaseHelper.checkUserLogin(username, password);
+            btnLogin.setEnabled(false);
+            btnLogin.setText("Đang đăng nhập...");
             
-            if (user != null) {
-                // Login successful
-                sessionManager.createLoginSession(user);
-                Toast.makeText(this, getString(R.string.login_success), Toast.LENGTH_SHORT).show();
-                navigateToMainActivity();
-            } else {
-                // Login failed
-                Toast.makeText(this, getString(R.string.error_login_invalid), Toast.LENGTH_SHORT).show();
-            }
+            // Sử dụng API để đăng nhập
+            ApiManager apiManager = new ApiManager(this);
+            apiManager.login(username, password, new ApiManager.ApiCallback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    // Login successful
+                    sessionManager.createLoginSession(user);
+                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+                    navigateToMainActivity();
+                }
+                
+                @Override
+                public void onError(String error) {
+                    // Login failed - thử với database local như fallback
+                    User user = databaseHelper.checkUserLogin(username, password);
+                    if (user != null) {
+                        sessionManager.createLoginSession(user);
+                        Toast.makeText(LoginActivity.this, "Đăng nhập thành công (local)", Toast.LENGTH_SHORT).show();
+                        navigateToMainActivity();
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Đăng nhập thất bại: " + error, Toast.LENGTH_SHORT).show();
+                        btnLogin.setEnabled(true);
+                        btnLogin.setText("Đăng nhập");
+                    }
+                }
+            });
         }
     }
     

@@ -144,7 +144,28 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void loadProducts() {
-        // Sample products data
+        // Sử dụng API để lấy danh sách sản phẩm từ MongoDB
+        ApiManager apiManager = new ApiManager(this);
+        
+        apiManager.getAllProducts(new ApiManager.ApiCallback<List<Product>>() {
+            @Override
+            public void onSuccess(List<Product> data) {
+                productList.clear();
+                productList.addAll(data);
+                productAdapter.notifyDataSetChanged();
+            }
+            
+            @Override
+            public void onError(String error) {
+                // Nếu API lỗi, sử dụng dữ liệu mẫu
+                loadSampleProducts();
+                Toast.makeText(MainActivity.this, "Không thể tải từ API: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void loadSampleProducts() {
+        // Dữ liệu mẫu khi API không khả dụng
         productList.clear();
         productList.add(new Product("ÁO SƠ MI - APH12", "2099-00008", "1,000,000đ", android.R.drawable.ic_menu_gallery));
         productList.add(new Product("ÁO JACKET - APH45", "1,0500-00026", "1,200,000đ", android.R.drawable.ic_menu_gallery));
@@ -152,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
         productList.add(new Product("QUẦN JEANS - GJR25", "0000-00000", "950,000đ", android.R.drawable.ic_menu_gallery));
         productList.add(new Product("ÁO THUN NAM", "AT-001", "450,000đ", android.R.drawable.ic_menu_gallery));
         productList.add(new Product("QUẦN TÂY NAM", "QT-002", "680,000đ", android.R.drawable.ic_menu_gallery));
-        
         productAdapter.notifyDataSetChanged();
     }
 }

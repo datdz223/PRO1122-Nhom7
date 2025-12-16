@@ -136,32 +136,55 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         if (isValid) {
-            // Check if username already exists
-            DatabaseHelper databaseHelper = new DatabaseHelper(this);
+            btnRegister.setEnabled(false);
+            btnRegister.setText("Đang đăng ký...");
             
-            if (databaseHelper.checkUsernameExists(username)) {
-                tilUsername.setError(getString(R.string.error_username_exists));
-                return;
-            }
-            
-            if (databaseHelper.checkEmailExists(email)) {
-                tilEmail.setError(getString(R.string.error_email_exists));
-                return;
-            }
-            
-            // Create new user
+            // Sử dụng API để đăng ký
             User newUser = new User(fullName, username, email, password);
-            boolean isAdded = databaseHelper.addUser(newUser);
+            ApiManager apiManager = new ApiManager(this);
             
-            if (isAdded) {
-                Toast.makeText(this, getString(R.string.register_success), Toast.LENGTH_SHORT).show();
-                // Navigate to login screen after successful registration
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            } else {
-                Toast.makeText(this, getString(R.string.error_register_failed), Toast.LENGTH_SHORT).show();
-            }
+            apiManager.register(newUser, new ApiManager.ApiCallback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    Toast.makeText(RegisterActivity.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
+                    // Navigate to login screen after successful registration
+                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+                
+                @Override
+                public void onError(String error) {
+                    // Nếu API lỗi, thử với database local như fallback
+                    DatabaseHelper databaseHelper = new DatabaseHelper(RegisterActivity.this);
+                    
+                    if (databaseHelper.checkUsernameExists(username)) {
+                        tilUsername.setError("Tên đăng nhập đã tồn tại");
+                        btnRegister.setEnabled(true);
+                        btnRegister.setText("Đăng ký");
+                        return;
+                    }
+                    
+                    if (databaseHelper.checkEmailExists(email)) {
+                        tilEmail.setError("Email đã tồn tại");
+                        btnRegister.setEnabled(true);
+                        btnRegister.setText("Đăng ký");
+                        return;
+                    }
+                    
+                    boolean isAdded = databaseHelper.addUser(newUser);
+                    if (isAdded) {
+                        Toast.makeText(RegisterActivity.this, "Đăng ký thành công (local)", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Đăng ký thất bại: " + error, Toast.LENGTH_SHORT).show();
+                        btnRegister.setEnabled(true);
+                        btnRegister.setText("Đăng ký");
+                    }
+                }
+            });
         }
     }
 }
