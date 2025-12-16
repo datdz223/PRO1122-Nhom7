@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 public class SessionManager {
     private static final String PREF_NAME = "UserSession";
     private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    private static final String KEY_USER_ID = "userId";
     private static final String KEY_USERNAME = "username";
     private static final String KEY_FULL_NAME = "fullName";
     private static final String KEY_EMAIL = "email";
@@ -26,10 +27,18 @@ public class SessionManager {
      */
     public void createLoginSession(User user) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putInt(KEY_USER_ID, user.getId());
         editor.putString(KEY_USERNAME, user.getUsername());
         editor.putString(KEY_FULL_NAME, user.getFullName());
         editor.putString(KEY_EMAIL, user.getEmail());
         editor.apply();
+    }
+    
+    /**
+     * Get logged in user's ID
+     */
+    public int getUserId() {
+        return pref.getInt(KEY_USER_ID, -1);
     }
     
     /**

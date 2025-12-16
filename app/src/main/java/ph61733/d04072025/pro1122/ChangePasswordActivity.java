@@ -29,7 +29,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     private TextInputLayout tilConfirmNewPassword;
     private MaterialButton btnChangePassword;
     private TextView tvBackToLogin;
-    
+
     private DatabaseHelper databaseHelper;
 
     @Override
