@@ -1,6 +1,5 @@
 package ph61733.d04072025.pro1122.auth;
 
-import android.app.backup.SharedPreferencesBackupHelper;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -11,13 +10,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LoginActivity {private EditText etEmailOrPhone;
+public class LoginActivity {
+    private EditText etEmailOrPhone;
     private EditText etPassword;
     private Button btnLogin;
     private TextView tvForgotPassword;
     private TextView tvRegister;
     private ProgressBar progressBar;
-    private SharedPreferencesBackupHelper prefs;
+    private SharedPreferencesHelper prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,115 +96,4 @@ public class LoginActivity {private EditText etEmailOrPhone;
             etPassword.requestFocus();
             return false;
         }
-
-        return true;
-    }
-
-    private void performLogin(String emailOrPhone, String password) {
-        showLoading(true);
-
-        LoginRequest request = new LoginRequest(emailOrPhone, password);
-
-        Call<ApiResponse<LoginResponse>> call = ApiService.getAuthApiService().login(request);
-
-        call.enqueue(new Callback<ApiResponse<LoginResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<LoginResponse>> call, Response<ApiResponse<LoginResponse>> response) {
-                showLoading(false);
-
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<LoginResponse> apiResponse = response.body();
-
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
-                        LoginResponse loginResponse = apiResponse.getData();
-
-                        // Lưu token và thông tin user
-                        String token = loginResponse.getToken();
-                        if (token != null) {
-                            prefs.saveUserToken(token);
-                            prefs.setLoggedIn(true);
-
-                            LoginResponse.UserData userData = loginResponse.getUser();
-                            if (userData != null) {
-                                prefs.saveUserId(userData.getId());
-
-                                // Lưu role vào SharedPreferences
-                                String role = userData.getRole();
-                                if (role != null) {
-                                    prefs.saveUserRole(role);
-                                }
-
-                                // Kiểm tra role và navigate đến màn hình phù hợp
-                                if (userData.isAdmin()) {
-                                    // Nếu là admin, chuyển đến AdminDashboardActivity
-                                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công với quyền quản lý!", Toast.LENGTH_SHORT).show();
-                                    navigateToAdminDashboard();
-                                } else {
-                                    // Nếu là user thường, chuyển đến HomeActivity
-                                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                                    navigateToHome();
-                                }
-                            } else {
-                                // Nếu không có user data, mặc định là user thường
-                                prefs.saveUserRole("CUSTOMER");
-                                Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                                navigateToHome();
-                            }
-
-                            // Reset ApiClient để load lại với token mới
-                            ApiClient.resetClient();
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Không nhận được token từ server", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        String errorMsg = apiResponse.getMessage() != null
-                                ? apiResponse.getMessage()
-                                : "Đăng nhập thất bại";
-                        Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    String errorMsg = "Lỗi kết nối: " + response.code();
-                    if (response.errorBody() != null) {
-                        try {
-                            errorMsg = response.errorBody().string();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<LoginResponse>> call, Throwable t) {
-                showLoading(false);
-                String errorMsg = "Lỗi kết nối: " + t.getMessage();
-                Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
-                t.printStackTrace();
-            }
-        });
-    }
-
-    private void navigateToHome() {
-        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void navigateToAdminDashboard() {
-        Intent intent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void showLoading(boolean show) {
-        if (progressBar != null) {
-            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        }
-        btnLogin.setEnabled(!show);
-    }
-}
-
-
-
 }
